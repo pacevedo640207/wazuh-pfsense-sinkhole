@@ -1,0 +1,47 @@
+<!--
+  Reglas de ejemplo para disparar el DNS Sinkhole desde Wazuh
+  Ubicación: /var/ossec/etc/rules/local_rules.xml
+
+  NOTA: Ajusta los IDs, condiciones y el campo "value" a tu entorno
+  y fuentes de datos (Sysmon, logs de pfSense, Suricata, feeds de
+  threat intelligence, etc.)
+-->
+
+<group name="dns_sinkhole,wazuh_pfsense,">
+
+  <!-- Regla base: consulta DNS sospechosa detectada en logs -->
+  <rule id="100200" level="10">
+    <if_group>syslog</if_group>
+    <match>NOERROR</match>
+    <description>Consulta DNS a dominio potencialmente malicioso</description>
+    <options>no_full_log</options>
+    <group>dns_query,</group>
+  </rule>
+
+  <!-- Dominio encontrado en lista CDB de threat intelligence -->
+  <rule id="100201" level="12">
+    <if_sid>100200</if_sid>
+    <list field="dns.query" lookup="match_key">etc/lists/malicious-domains</list>
+    <description>Consulta DNS a dominio en lista de amenazas: $(dns.query)</description>
+    <group>dns_sinkhole,threat_intel,</group>
+  </rule>
+
+  <!-- Evento DNS de Sysmon (Windows) — evento ID 22 -->
+  <rule id="100202" level="10">
+    <if_group>windows</if_group>
+    <field name="win.system.eventID">^22$</field>
+    <field name="win.eventdata.queryName" type="pcre2">\.(top|xyz|tk|ml|ga|cf|gq|pw)$</field>
+    <description>Consulta DNS a TLD de alto riesgo: $(win.eventdata.queryName)</description>
+    <group>dns_sinkhole,suspicious_tld,</group>
+  </rule>
+
+  <!-- Alerta DNS de Suricata -->
+  <rule id="100203" level="14">
+    <if_group>suricata</if_group>
+    <field name="alert.category">^DNS</field>
+    <field name="alert.severity">^1$</field>
+    <description>Suricata: alerta DNS crítica - $(dns.query)</description>
+    <group>dns_sinkhole,suricata,ids,</group>
+  </rule>
+
+</group>

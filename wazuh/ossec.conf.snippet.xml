@@ -1,0 +1,26 @@
+<!--
+  Fragmento de ossec.conf para el active-response DNS Sinkhole
+  Añadir dentro del bloque <ossec_config> en /var/ossec/etc/ossec.conf
+-->
+
+<!-- Comando: DNS Sinkhole vía API REST de pfSense -->
+<command>
+  <n>domain_sinkhole</n>
+  <executable>pfsense_dns_sinkhole.py</executable>
+  <timeout_allowed>yes</timeout_allowed>
+</command>
+
+<!--
+  Active Response: ejecuta el sinkhole en el propio Manager
+
+  location server  → ejecuta en el Manager, no en agentes
+  rules_id         → ajusta al ID de tu regla de detección
+  timeout 3600     → Wazuh envía "delete" tras 1 hora
+                     (el cron de pfBlockerNG ya habrá asumido el bloqueo)
+-->
+<active-response>
+  <command>domain_sinkhole</command>
+  <location>server</location>
+  <rules_id>100200</rules_id>
+  <timeout>3600</timeout>
+</active-response>

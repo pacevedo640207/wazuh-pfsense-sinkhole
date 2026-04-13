@@ -1,0 +1,23 @@
+# Secretos y variables de entorno — NUNCA subir al repositorio
+.env
+*.env
+override.conf
+*api_key*
+*apikey*
+
+# Logs
+*.log
+/logs/
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
+
+# macOS
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+*.iml

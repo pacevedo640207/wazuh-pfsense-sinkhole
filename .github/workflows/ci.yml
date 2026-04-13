@@ -1,0 +1,43 @@
+# Validación automática en cada push y pull request
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  lint-python:
+    name: Validar Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install flake8
+      - run: flake8 wazuh/pfsense_dns_sinkhole.py --max-line-length=120 --ignore=E501,W503
+
+  lint-shell:
+    name: Validar scripts Shell
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y shellcheck
+      - run: |
+          shellcheck scripts/pfblockerng_pre_process.sh
+          shellcheck scripts/pfblockerng_post_process.sh
+          shellcheck scripts/wazuh_pfblockerng_cron.sh
+
+  validate-xml:
+    name: Validar XML de Wazuh
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y libxml2-utils
+      - run: |
+          xmllint --noout wazuh/ossec.conf.snippet.xml
+          xmllint --noout wazuh/local_rules.xml
